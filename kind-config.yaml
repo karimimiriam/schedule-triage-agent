@@ -1,0 +1,6 @@
+# Local Kubernetes cluster for codeSafi demos
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: codesafi
+nodes:
+  - role: control-plane
