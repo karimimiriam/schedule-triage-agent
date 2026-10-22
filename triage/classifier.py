@@ -42,6 +42,7 @@ class GeminiClassifier:
                 "system_instruction": self.instructions,
                 "response_mime_type": "application/json",
                 "response_schema": Request,
+                "automatic_function_calling": {"disable": True},
             },
         )
         self.version = response.model_version
