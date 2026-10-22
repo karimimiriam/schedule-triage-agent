@@ -3,6 +3,7 @@
 from typing import Protocol
 
 from google import genai
+from google.genai import types
 
 from triage.github import Issue
 from triage.hands import Request, Rules
@@ -22,10 +23,16 @@ class Classifier(Protocol):
 
 
 class GeminiClassifier:
-    def __init__(self, model: str, rules: Rules) -> None:
+    def __init__(self, model: str, rules: Rules, timeout_seconds: int = 30) -> None:
         self.model = model
         self.instructions = instructions(rules)
-        self.client = genai.Client()
+        self.version: str | None = None
+        self.client = genai.Client(
+            http_options=types.HttpOptions(
+                timeout=timeout_seconds * 1000,
+                retry_options=types.HttpRetryOptions(attempts=2),
+            )
+        )
 
     def suggest(self, issue: Issue) -> Request:
         response = self.client.models.generate_content(
