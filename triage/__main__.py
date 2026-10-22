@@ -3,6 +3,7 @@
 import argparse
 import logging
 import os
+import time
 
 import httpx
 from google.genai.errors import APIError
@@ -19,11 +20,15 @@ def run(dry_run: bool) -> None:
     rules = Rules()
     github = GitHub(os.environ["GITHUB_TOKEN"], os.environ["GITHUB_REPOSITORY"])
     classifier = GeminiClassifier(os.environ["GEMINI_MODEL"], rules)
+    pause = 60 / int(os.environ.get("MODEL_REQUESTS_PER_MINUTE", "5"))
     done = 0
 
     issues = github.open_issues()
     log.info("found %s open issues", len(issues))
-    for issue in issues:
+    for position, issue in enumerate(issues):
+        if position:
+            time.sleep(pause)  # stay under the model's rate limit instead of hitting it
+
         # If the model is down or answers badly, change nothing and move on.
         try:
             request = classifier.suggest(issue)
