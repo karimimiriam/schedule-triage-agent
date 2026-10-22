@@ -1,0 +1,59 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: schedule-triage-agent
+  namespace: triage
+spec:
+  schedule: "0 6 * * 1-5"
+  timeZone: Africa/Nairobi
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 600
+      ttlSecondsAfterFinished: 86400
+      template:
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            runAsGroup: 10001
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: agent
+              image: schedule-triage-agent:0.1.2
+              imagePullPolicy: Never
+              env:
+                - name: GITHUB_REPOSITORY
+                  value: karimimiriam/schedule-triage-agent
+                - name: GEMINI_MODEL
+                  value: gemini-3.5-flash-lite
+                - name: MODEL_REQUESTS_PER_MINUTE
+                  value: "5"
+                - name: GITHUB_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: triage-keys
+                      key: GITHUB_TOKEN
+                - name: GEMINI_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: triage-keys
+                      key: GEMINI_API_KEY
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  memory: 256Mi

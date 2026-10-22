@@ -26,6 +26,9 @@ def run(dry_run: bool) -> None:
     issues = github.open_issues()
     log.info("found %s open issues", len(issues))
     for position, issue in enumerate(issues):
+        if issue.labels & rules.labels.keys():
+            log.info("#%s already labelled, no model call needed", issue.number)
+            continue
         if position:
             time.sleep(pause)  # stay under the model's rate limit instead of hitting it
 
