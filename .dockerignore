@@ -1,0 +1,7 @@
+# Deny everything by default; only the files below may enter the image.
+*
+!pyproject.toml
+!uv.lock
+!.python-version
+!triage/
+**/__pycache__
